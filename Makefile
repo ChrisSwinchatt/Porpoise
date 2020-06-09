@@ -1,4 +1,6 @@
-MACHINE = raspi2
+MACHINE_BASE    = raspi
+MACHINE_VERSION = 3
+MACHINE         = $(MACHINE_BASE)$(MACHINE_VERSION)
 
 KERNEL_ELF    = bin/porpoise.elf
 KERNEL_BINARY = bin/sdcard/boot/kernel8.img
@@ -6,22 +8,29 @@ KERNEL_BINARY = bin/sdcard/boot/kernel8.img
 PREFIX := aarch64-linux-gnu
 
 CXX       = $(PREFIX)-g++
-CXFLAGS   = -Iinclude/shared -Iinclude/$(MACHINE)\
-			-ffreestanding -nostdlib -nodefaultlibs -nostartfiles -fno-exceptions -fno-rtti -fno-stack-protector \
-			-O2\
+CXFLAGS   = -Iinclude/shared -Iinclude/$(MACHINE_BASE)\
+            -D__$(MACHINE_BASE)__=$(MACHINE_VERSION)\
+			-ffreestanding -nostdlib -fno-exceptions -fno-rtti -fno-stack-protector\
 			-std=c++17 -Wall -Wextra
-
 LDFLAGS   = -Ttools/ld/$(MACHINE).ld 
-
 LIBRARIES = -lgcc
-
 OBJCOPY  = $(PREFIX)-objcopy
 
 EMU      = qemu-system-aarch64
-EMUFLAGS = -M raspi2,usb=on -smp 4 -m 512 -display sdl -sdl -d guest_errors
+EMUFLAGS = -M $(MACHINE),usb=on -smp 4 -m 512 -d guest_errors -display none
 
 OBJECTS = $(patsubst src/%.S,obj/%.o,$(patsubst src/%.cpp,obj/%.o,$(shell find src/shared \( -name '*.cpp' -o -name '*.S' \))))\
-          $(patsubst src/%.S,obj/%.o,$(patsubst src/%.cpp,obj/%.o,$(shell find src/$(MACHINE) \( -name '*.cpp' -o -name '*.S' \))))
+          $(patsubst src/%.S,obj/%.o,$(patsubst src/%.cpp,obj/%.o,$(shell find src/$(MACHINE_BASE) \( -name '*.cpp' -o -name '*.S' \))))
+
+ifeq ($(DEBUG),)
+DEBUG=1
+endif
+
+ifeq ($(DEBUG),1)
+CXFLAGS += -ggdb -O0
+else
+CXFLAGS += -g0 -O3
+endif
 
 obj/%.o: src/%.cpp
 	@echo "Compiling `basename $^`"
@@ -36,7 +45,7 @@ obj/%.o: src/%.S
 all: $(KERNEL_BINARY)
 
 clean:
-	@rm -rf bin/* obj/*
+	@rm -rf obj/* $(KERNEL_BINARY) $(KERNEL_ELF)
 
 $(KERNEL_BINARY): $(KERNEL_ELF)
 	@echo "Converting to binary `basename $@`"
@@ -49,10 +58,13 @@ $(KERNEL_ELF): $(OBJECTS)
 	@$(CXX) $(CXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBRARIES)
 
 run-qemu: $(KERNEL_ELF)
-	@$(EMU) $(EMUFLAGS) -serial stdio -kernel $(KERNEL_ELF)
+	$(EMU) $(EMUFLAGS) -serial stdio -kernel $(KERNEL_ELF)
+
+mon-qemu: $(KERNEL_ELF)
+	$(EMU) $(EMUFLAGS) -monitor stdio -kernel $(KERNEL_ELF)
 
 debug-qemu: $(KERNEL_ELF)
-	@$(EMU) $(EMUFLAGS) -S -s &
-	gdb $(KERNEL_BINARY) -ex "target remote :1234" -kernel $(KERNEL_ELF)
+	$(EMU) $(EMUFLAGS) -kernel $(KERNEL_ELF) -S -s &
+	gdb-multiarch $(KERNEL_BINARY) -ex "target remote :1234" -ex "set architecture aarch64"
 
-.PHONY: run-qemu debug-qemu
+.PHONY: run-qemu debug-qemu $(KERNEL_BINARY) $(KERNEL_ELF)
