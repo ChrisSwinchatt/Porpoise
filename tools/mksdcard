@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Create an EFI-bootable USB image file.
+# Copyright (C) 2019-2020 Chris Swinchatt <chris@swinchatt.dev>. See the file LICENSE for details.
+
+function show_usage
+{
+    cat <<EOF
+Usage: $0 [--dry] <output file> <file size (MB)> <input directory>
+EOF
+}
+
+DRY=0
+
+function call
+{
+    if [[ $DRY -ne 0 ]]; then
+        echo $*
+    else
+        eval $*
+        local status=$?
+        if [[ $status -ne 0 ]]; then
+            [[ -e "$TMP_FILE" ]] && rm "$TMP_FILE"
+            exit $status
+        fi
+    fi
+}
+
+if [[ $# -eq 0 ]]; then
+    show_usage >&2
+    exit 1
+fi
+
+case "$1" in
+    -h|-help|--help)
+        show_usage
+        exit 0
+        ;;
+    --dry)
+        DRY=1
+        shift
+        ;;
+    *)
+        ;;
+esac
+
+TMP_FILE=$(mktemp)
+OUTPUT_FILE=$1
+FILE_SIZE=$2
+INPUT_DIR=$3
+
+call dd if=/dev/zero of="$TMP_FILE" bs=1M "count=$FILE_SIZE"
+call mkfs.vfat "$TMP_FILE"
+pushd "$INPUT_DIR"
+call find . -type d | while read file; do [[ $file = "." ]] || mmd -i "$TMP_FILE" "::$(echo $file | sed 's/\.\///')"; done
+call find . -type f | while read file; do mcopy -i "$TMP_FILE" "$(echo $file | sed 's/\.\///')" "::$(echo $file | sed 's/\.\///')"; done
+popd
+
+mv "$TMP_FILE" "$OUTPUT_FILE"
