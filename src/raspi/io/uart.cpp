@@ -35,9 +35,9 @@ namespace porpoise { namespace io {
 
         // Set up pins 14 & 15.
         mmio::put(mmio::reg::GPIO_UP_DOWN, 0);
-        delay::cycles(150);
+        delay(timespan::cycles(150));
         mmio::put(mmio::reg::GPIO_CLOCK0, (1 << 14) | (1 << 15));
-        delay::cycles(150);
+        delay(timespan::cycles(150));
         mmio::put(mmio::reg::GPIO_CLOCK0, 0);
 
         // Clear pending interrupts.

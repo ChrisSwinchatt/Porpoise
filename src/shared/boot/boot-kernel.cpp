@@ -4,6 +4,7 @@
 #include <porpoise/io/logging/sinks/serial-sink.hpp>
 #include <porpoise/io/uart.hpp>
 #include <porpoise/sync/atomic.hpp>
+#include <porpoise/time/timespan.hpp>
 #include <porpoise/time/delay.hpp>
 
 using namespace porpoise::io;
@@ -27,6 +28,7 @@ static void clear_bss()
 namespace porpoise { namespace boot {
     using sync::atomic;
     using time::delay;
+    using time::timespan;
 
     static atomic<int> cpu_id(0);
 
@@ -45,7 +47,7 @@ namespace porpoise { namespace boot {
         }
         else
         {
-            delay::millis(1000);
+            delay(timespan::millis(1000));
         }
 
         cpu_main(me);

@@ -2,9 +2,11 @@
 #include <stdint.h>
 
 #include <porpoise/io/logging.hpp>
-#include <porpoise/time/counters.hpp>
+#include <porpoise/time/timespan.hpp>
 
 namespace porpoise { namespace io { namespace logging {
+    using time::timespan;
+
     log_level      log::_minimum_level;
     log_sink*      log::_sinks[MAX_SINK];
     int            log::_num_sinks;
@@ -13,7 +15,7 @@ namespace porpoise { namespace io { namespace logging {
     log log::get(log_level level, const char* lvlstr)
     {
         auto inst   = log(level);
-        auto millis = time::counters::millis();
+        auto millis = timespan::get_program_counter().millis();
         auto secs   = millis/1000;
         millis -= secs*1000;
         inst.emit(secs);
