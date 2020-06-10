@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include <porpoise/sync/atomic.hpp>
 #include <porpoise/sync/spinlock.hpp>
 
 #define PORPOISE_LOG_TRACE(...) do {auto __log = ::porpoise::io::logging::log::trace(); __log << __VA_ARGS__;} while (0)
@@ -60,6 +61,10 @@ namespace porpoise { namespace io { namespace logging {
 
         static bool add_sink(log_sink* sink);
 
+        log(log&& other);
+
+        void operator=(log&& other);
+
         ~log();
 
         void emit(char c);
@@ -95,24 +100,33 @@ namespace porpoise { namespace io { namespace logging {
         void boolalpha(bool next);
 
         void hexupper(bool next);
+
+        log(const log&) = delete;
+
+        void operator=(const log&) = delete;
     protected:
         log(log_level level);
 
     private:
-        static log_level      _minimum_level;
-        static log_sink*      _sinks[MAX_SINK];
-        static int            _num_sinks;
-        static sync::spinlock _lock;
+        static log_level       _minimum_level;
+        static log_sink*       _sinks[MAX_SINK];
+        static int             _num_sinks;
+        static sync::spinlock  _lock;
 
         static log get(log_level level, const char* lvlstr);
 
-        log_level _current_level;
-        uint8_t   _field_width;
-        char      _fill_char;
-        uint8_t   _base;
-        bool      _prefix    : 1;
-        bool      _boolalpha : 1;
-        bool      _hexupper  : 1;
+        log_level          _current_level;
+        uint8_t            _field_width;
+        char               _fill_char;
+        uint8_t            _base;
+        bool               _prefix    : 1;
+        bool               _boolalpha : 1;
+        bool               _hexupper  : 1;
+        sync::atomic<bool> _moved;
+
+        void emit_all(char c);
+
+        void emit_all(const char* s);
     };
 
 }}} // porpoise::io::logging

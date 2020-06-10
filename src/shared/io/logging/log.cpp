@@ -1,11 +1,15 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include <string.hpp>
+
 #include <porpoise/io/logging.hpp>
 #include <porpoise/time/timespan.hpp>
 
 namespace porpoise { namespace io { namespace logging {
     using time::timespan;
+    using sync::spinlock;
+    using sync::atomic_flag;
 
     log_level      log::_minimum_level;
     log_sink*      log::_sinks[MAX_SINK];
@@ -18,23 +22,29 @@ namespace porpoise { namespace io { namespace logging {
         auto millis = timespan::get_program_counter().millis();
         auto secs   = millis/1000;
         millis -= secs*1000;
-        inst.emit(secs);
-        inst.emit('.');
-        inst.emit(millis);
-        inst.emit(' ');
-        inst.emit(lvlstr);
-        inst.emit("] ");
+        inst << set_width(3)
+             << secs 
+             << reset() 
+             << '.' 
+             << set_width(3) 
+             << set_fill('0') 
+             << millis 
+             << reset() 
+             << ' ' 
+             << lvlstr 
+             << "] "
+        ;
         return inst;
     }
 
     log log::trace()
     {
-        return get(log_level::trace, "trac");
+        return get(log_level::trace, "trace");
     }
 
     log log::debug()
     {
-        return get(log_level::debug, "debu");
+        return get(log_level::debug, "debug");
     }
 
     log log::info()
@@ -49,7 +59,7 @@ namespace porpoise { namespace io { namespace logging {
 
     log log::error()
     {
-        return get(log_level::error, "err]");
+        return get(log_level::error, "error");
     }
 
     bool log::add_sink(log_sink* sink)
@@ -89,14 +99,61 @@ namespace porpoise { namespace io { namespace logging {
     , _fill_char(' ')
     , _base(10)
     , _prefix(false)
+    , _hexupper(false)
+    , _moved(false)
     {
         _lock.acquire();
     }
 
+    log::log(log&& other)
+    : _current_level(other._current_level)
+    , _field_width(other._field_width)
+    , _fill_char(other._fill_char)
+    , _base(other._base)
+    , _prefix(other._prefix)
+    , _boolalpha(other._boolalpha)
+    , _hexupper(other._hexupper)
+    , _moved(other._moved.load())
+    {
+        other._moved.store(true);
+    }
+
+    void log::operator=(log&& other)
+    {
+        _current_level = other._current_level;
+        _field_width   = other._field_width;
+        _fill_char     = other._fill_char;
+        _base          = other._base;
+        _prefix        = other._prefix;
+        _boolalpha     = other._boolalpha;
+        _hexupper      = other._hexupper;
+        _moved         = other._moved;
+        other._moved.store(true);
+    }
+
     log::~log()
     {
-        emit("\r\n");
-        _lock.release();
+        if (!_moved)
+        {
+            emit("\r\n");
+            _lock.release();
+        }
+    }
+
+    void log::emit_all(char c)
+    {
+        for (auto i = 0; i < _num_sinks; i++)
+        {
+            _sinks[i]->emit(_current_level, c);
+        }
+    }
+
+    void log::emit_all(const char* s)
+    {
+        for (auto i = 0; i < _num_sinks; i++)
+        {
+            _sinks[i]->emit(_current_level, s);
+        }
     }
 
     void log::emit(char c)
@@ -106,10 +163,12 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        for (auto i = 0; i < _num_sinks; i++)
+        for (auto j = 1; j < _field_width; j++)
         {
-            _sinks[i]->emit(_current_level, c);
+            emit_all(_fill_char);
         }
+
+        emit_all(c);
     }
 
     void log::emit(const char* string)
@@ -119,10 +178,12 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        for (auto i = 0; i < _num_sinks; i++)
+        for (auto j = strlen(string); j < _field_width; j++)
         {
-            _sinks[i]->emit(_current_level, string);
+            emit_all(_fill_char);
         }
+
+        emit_all(string);
     }
 
     void log::emit(intmax_t number)
@@ -134,7 +195,7 @@ namespace porpoise { namespace io { namespace logging {
 
         if (number < 0)
         {
-            emit('-');
+            emit_all('-');
             emit(static_cast<uintmax_t>(-number));
         }
         else
@@ -176,14 +237,14 @@ namespace porpoise { namespace io { namespace logging {
         }
 
         auto count = p - buffer;
-        while (count > _field_width)
+        while (count++ < _field_width)
         {
-            emit(_fill_char);
+            emit_all(_fill_char);
         }
 
         while (p >= buffer)
         {
-            emit(*p--);
+            emit_all(*p--);
         }
     }
 

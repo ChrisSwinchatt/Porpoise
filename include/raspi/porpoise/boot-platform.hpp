@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 namespace porpoise { namespace boot {
-    extern "C" void boot_kernel(uint64_t dtb);
+    extern "C" void boot_kernel(uint64_t dtb, uint64_t id) __attribute__((noreturn));
 }} // porpoise::boot
 
 #endif // ! __ASM_SOURCE__

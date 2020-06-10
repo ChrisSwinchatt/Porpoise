@@ -5,7 +5,7 @@ SECTIONS
     __kernel_start__ = .;
     .text BLOCK(4K) : ALIGN(4K) {
         __code_start__ = .;
-        *(.text.boot)
+        KEEP(*(.text.boot))
 		*(.text*)
 		*(.gnu.linkonce.t*)
         __code_end__   = .;

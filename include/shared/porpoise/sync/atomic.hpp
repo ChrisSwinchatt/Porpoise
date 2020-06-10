@@ -1,6 +1,16 @@
 #pragma once
 
 namespace porpoise { namespace sync {
+    enum class memory_order
+    {
+        seq_cst = __ATOMIC_SEQ_CST,
+        acq_rel = __ATOMIC_ACQ_REL,
+        release = __ATOMIC_RELEASE,
+        acquire = __ATOMIC_ACQUIRE,
+        consume = __ATOMIC_CONSUME,
+        relaxed = __ATOMIC_RELAXED
+    };
+
     /// Atomic flag.
     struct atomic_flag {
         /// Construct with initial value.
@@ -8,15 +18,15 @@ namespace porpoise { namespace sync {
         {}
 
         /// Set the value and return the previous value.
-        bool test_and_set() volatile
+        bool test_and_set(memory_order order = memory_order::seq_cst) volatile
         {
-            return __sync_bool_compare_and_swap(&_value, false, true);
+            return __atomic_test_and_set(&_value, static_cast<int>(order));
         }
 
         /// Clear the value.
-        void clear() volatile
+        void clear(memory_order order = memory_order::seq_cst) volatile
         {
-            _value = 0;
+            __atomic_clear(&_value, static_cast<int>(order));
         }
     private:
         bool _value;
@@ -30,39 +40,36 @@ namespace porpoise { namespace sync {
             using const_reference  = const volatile T&;
             using rvalue_reference = T&&;
 
-            void store(const_reference value) volatile
+            void store(const_reference next, memory_order order = memory_order::seq_cst) volatile
             {
-                _value = value;
+                __atomic_store(&_value, &next, static_cast<int>(order));
             }
 
-            void store(rvalue_reference value) volatile
+            void store(rvalue_reference next, memory_order order = memory_order::seq_cst) volatile
             {
-                _value = value;
+                __atomic_store(&_value, &next, static_cast<int>(order));
             }
 
-            reference load() volatile
+            value_type load(memory_order order = memory_order::seq_cst) const volatile
             {
-                return _value;
+                value_type loaded;
+                __atomic_load(&_value, &loaded, static_cast<int>(order));
+                return loaded;
             }
 
-            const_reference load() const volatile
+            value_type compare_and_swap(
+                const_reference expect,
+                const_reference next,
+                memory_order    order = memory_order::seq_cst) volatile
             {
-                return _value;
+                value_type tmp = expect;
+                __atomic_compare_exchange(&_value, &tmp, &next, false, static_cast<int>(order));
+                return tmp;
             }
 
-            const_reference compare_and_swap(const_reference value, const_reference next) volatile
+            operator value_type() volatile
             {
-                __sync_val_compare_and_swap(&_value, value, next);
-            }
-
-            operator reference() volatile
-            {
-                return _value;
-            }
-
-            operator const_reference() const volatile
-            {
-                return _value;
+                return load();
             }
         protected:
             value_type _value;
@@ -85,11 +92,13 @@ namespace porpoise { namespace sync {
         atomic<value_type>& operator=(const value_type& other)
         {
             this->store(other);
+            return *this;
         }
 
         atomic<value_type>& operator=(const atomic<value_type>& other)
         {
             this->store(other.load());
+            return *this;
         }
     };
 
@@ -112,15 +121,23 @@ namespace porpoise { namespace sync {
         using reference        = typename ::porpoise::sync::internal::atomic_base<TYPE>::reference;       \
         using const_reference  = typename ::porpoise::sync::internal::atomic_base<TYPE>::const_reference; \
         using rvalue_reference = typename ::porpoise::sync::internal::atomic_base<TYPE>::rvalue_reference;\
-        explicit atomic(const_reference value) { this->_value = value; }                                 \
-        explicit atomic(rvalue_reference value) { this->_value = value; }                                \
+        explicit atomic(const_reference value) { this->_value = value; }                                  \
+        explicit atomic(rvalue_reference value) { this->_value = value; }                                 \
         TYPE operator++()                                                                                 \
         {                                                                                                 \
-            return __sync_fetch_and_add(&_value, 1);                                                     \
+            return __atomic_fetch_add(&_value, 1, static_cast<int>(memory_order::seq_cst));               \
         }                                                                                                 \
         TYPE operator--()                                                                                 \
         {                                                                                                 \
-            return __sync_fetch_and_sub(&_value, 1);                                                     \
+            return __atomic_fetch_sub(&_value, 1, static_cast<int>(memory_order::seq_cst));               \
+        }                                                                                                 \
+        TYPE operator++(int)                                                                              \
+        {                                                                                                 \
+            return __atomic_add_fetch(&_value, 1, static_cast<int>(memory_order::seq_cst));               \
+        }                                                                                                 \
+        TYPE operator--(int)                                                                              \
+        {                                                                                                 \
+            return __atomic_sub_fetch(&_value, 1, static_cast<int>(memory_order::seq_cst));               \
         }                                                                                                 \
     };
 
@@ -163,12 +180,22 @@ namespace porpoise { namespace sync {
 
         pointer operator++()
         {
-            return __sync_fetch_and_add(&(this->_value), 1);
+            return __atomic_fetch_add(&(this->_value), 1, static_cast<int>(memory_order::seq_cst));
         }
 
         pointer operator--()
         {
-            return __sync_fetch_and_sub(&(this->_value), 1);
+            return __atomic_fetch_sub(&(this->_value), 1, static_cast<int>(memory_order::seq_cst));
+        }
+
+        pointer operator++(int)
+        {
+            return __atomic_add_fetch(&(this->_value), 1, static_cast<int>(memory_order::seq_cst));
+        }
+
+        pointer operator--(int)
+        {
+            return __atomic_sub_fetch(&(this->_value), 1, static_cast<int>(memory_order::seq_cst));
         }
     };
 

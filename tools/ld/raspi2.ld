@@ -1,7 +1,7 @@
 ENTRY(_start)
 SECTIONS
 {
-    . = 0x80000;
+    . = 0x8000;
     __kernel_start__ = .;
     .text BLOCK(4K) : ALIGN(4K) {
         __code_start__ = .;

@@ -20,6 +20,6 @@ namespace porpoise { namespace sync {
             _flag.clear();
         }
     private:
-        porpoise::sync::atomic_flag _flag;
+        atomic_flag _flag;
     };
 }} // porpoise::sync

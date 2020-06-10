@@ -8,7 +8,7 @@ KERNEL_BINARY = bin/sdcard/boot/kernel8.img
 PREFIX := aarch64-linux-gnu
 
 CXX       = $(PREFIX)-g++
-CXFLAGS   = -Iinclude/shared -Iinclude/$(MACHINE_BASE)\
+CXFLAGS   = -Iinclude/shared -Iinclude/$(MACHINE_BASE) -Iinclude/shared/lib -Iinclude/$(MACHINE_BASE)/lib\
             -D__$(MACHINE_BASE)__=$(MACHINE_VERSION)\
 			-ffreestanding -nostdlib -fno-exceptions -fno-rtti -fno-stack-protector\
 			-std=c++17 -Wall -Wextra
@@ -64,7 +64,7 @@ mon-qemu: $(KERNEL_ELF)
 	$(EMU) $(EMUFLAGS) -monitor stdio -kernel $(KERNEL_ELF)
 
 debug-qemu: $(KERNEL_ELF)
-	$(EMU) $(EMUFLAGS) -kernel $(KERNEL_ELF) -S -s &
-	gdb-multiarch $(KERNEL_BINARY) -ex "target remote :1234" -ex "set architecture aarch64"
+	$(EMU) $(EMUFLAGS) -kernel $(KERNEL_ELF) -s -S &
+	gdb-multiarch -s $(KERNEL_ELF) -q -ex "set architecture aarch64" -ex "b _start" -ex "target remote :1234"
 
 .PHONY: run-qemu debug-qemu $(KERNEL_BINARY) $(KERNEL_ELF)
