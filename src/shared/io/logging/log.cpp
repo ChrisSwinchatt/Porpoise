@@ -22,9 +22,7 @@ namespace porpoise { namespace io { namespace logging {
         auto millis = timespan::get_program_counter().millis();
         auto secs   = millis/1000;
         millis -= secs*1000;
-        inst << set_width(3)
-             << secs 
-             << reset() 
+        inst << secs 
              << '.' 
              << set_width(3) 
              << set_fill('0') 
@@ -212,39 +210,33 @@ namespace porpoise { namespace io { namespace logging {
         }
 
         static constexpr unsigned DIGIT_MAX = sizeof(uintmax_t)*CHAR_BIT;
-        static char buffer[DIGIT_MAX];
+        char buffer[DIGIT_MAX];
         auto p     = buffer;
         auto q     = buffer + DIGIT_MAX;
         auto alpha = _hexupper ? 'A' : 'a';
-        if (number == 0)
+        do
         {
-            *p++ = '0';
-        }
-        else
-        {
-            do
+            auto r = number%_base;
+            if (r < 10)
             {
-                auto r = number%_base;
-                if (r < 10)
-                {
-                    *p++ = '0' + r;
-                }
-                else
-                {
-                    *p++ = alpha + r - 10;
-                }
-            } while (number /= _base && p < q);
-        }
+                *p++ = '0' + r;
+            }
+            else
+            {
+                *p++ = alpha + r - 10;
+            }
 
-        auto count = p - buffer;
-        while (count++ < _field_width)
+            number /= _base;
+        } while (number && p < q);
+
+        for (auto count = p - buffer; count < _field_width; count++)
         {
             emit_all(_fill_char);
         }
 
-        while (p >= buffer)
+        while (p-- > buffer)
         {
-            emit_all(*p--);
+            emit_all(*p);
         }
     }
 

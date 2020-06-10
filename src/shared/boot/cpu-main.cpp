@@ -6,6 +6,6 @@ using namespace porpoise::io::logging;
 namespace porpoise { namespace boot {
     void cpu_main(int id)
     {
-        PORPOISE_LOG_INFO("Hello from CPU " << id << "!");
+        PORPOISE_LOG_INFO("Hello from CPU " << id << '!');
     }
 }} // porpoise::boot

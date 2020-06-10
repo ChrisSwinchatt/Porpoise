@@ -47,13 +47,13 @@ namespace porpoise { namespace boot {
         clear_bss();
         _init();
 
-        static uart*       uart0 = uart::init(uart::baud_rate::bd9600);
+        static uart*       uart0 = uart::init(uart::baud_rate::bd115200);
         static serial_sink uart0_sink(uart0, log_level::trace);
         log::add_sink(&uart0_sink);
 
-        cpu0_init_complete.store(true);
-
         ensure_other_cpus();
+
+        cpu0_init_complete.store(true);
 
         cpu_main(0);
 
@@ -65,7 +65,7 @@ namespace porpoise { namespace boot {
         // Wait for CPU 0 initialisation.
         while (!cpu0_init_complete)
         {
-            delay(timespan::millis(100));
+            delay(timespan::millis(1));
         }
 
         cpu_main(id);

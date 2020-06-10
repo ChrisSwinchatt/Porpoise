@@ -4,11 +4,13 @@
 #include <porpoise.hpp>
 #include <porpoise/heap.hpp>
 #include <porpoise/sync/lock-guard.hpp>
+#include <porpoise/sync/spinlock.hpp>
 
 extern uint8_t __kernel_end__[];
 
 namespace porpoise {
     uintptr_t heap::_curr;
+    sync::spinlock heap::_lock;
 
     void heap::init()
     {
