@@ -4,11 +4,11 @@
 
 #include <porpoise/sync/spinlock.hpp>
 
-#define PORPOISE_LOG_TRACE(...) do {::porpoise::io::logging::log::trace() << __VA_ARGS__;} while (0)
-#define PORPOISE_LOG_DEBUG(...) do {::porpoise::io::logging::log::debug() << __VA_ARGS__;} while (0)
-#define PORPOISE_LOG_INFO(...)  do {::porpoise::io::logging::log::info()  << __VA_ARGS__;} while (0)
-#define PORPOISE_LOG_WARN(...)  do {::porpoise::io::logging::log::warn()  << __VA_ARGS__;} while (0)
-#define PORPOISE_LOG_ERROR(...) do {::porpoise::io::logging::log::error() << __VA_ARGS__;} while (0)
+#define PORPOISE_LOG_TRACE(...) do {auto __log = ::porpoise::io::logging::log::trace(); __log << __VA_ARGS__;} while (0)
+#define PORPOISE_LOG_DEBUG(...) do {auto __log = ::porpoise::io::logging::log::debug(); __log << __VA_ARGS__;} while (0)
+#define PORPOISE_LOG_INFO(...)  do {auto __log = ::porpoise::io::logging::log::info();  __log << __VA_ARGS__;} while (0)
+#define PORPOISE_LOG_WARN(...)  do {auto __log = ::porpoise::io::logging::log::warn();  __log << __VA_ARGS__;} while (0)
+#define PORPOISE_LOG_ERROR(...) do {auto __log = ::porpoise::io::logging::log::error(); __log << __VA_ARGS__;} while (0)
 
 namespace porpoise { namespace io { namespace logging {
     /// Log level.

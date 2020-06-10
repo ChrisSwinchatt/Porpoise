@@ -77,20 +77,20 @@ namespace porpoise { namespace io { namespace logging {
 }}} // porpoise::io::logging
 
 
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, char c);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, const char* s);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, int8_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, int16_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, int32_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, int64_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, uint8_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, uint16_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, uint32_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, uint64_t number);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, porpoise::io::logging::reset manip);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, porpoise::io::logging::set_width manip);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, porpoise::io::logging::set_fill manip);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, porpoise::io::logging::set_base manip);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, porpoise::io::logging::show_prefix manip);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, porpoise::io::logging::boolalpha manip);
-porpoise::io::logging::log operator<<(porpoise::io::logging::log log_, porpoise::io::logging::hexupper manip);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, char c);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, const char* s);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, int8_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, int16_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, int32_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, int64_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, uint8_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, uint16_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, uint32_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, uint64_t number);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, porpoise::io::logging::reset manip);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, porpoise::io::logging::set_width manip);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, porpoise::io::logging::set_fill manip);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, porpoise::io::logging::set_base manip);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, porpoise::io::logging::show_prefix manip);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, porpoise::io::logging::boolalpha manip);
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, porpoise::io::logging::hexupper manip);
