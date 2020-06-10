@@ -3,6 +3,7 @@
 
 #include <string.hpp>
 
+#include <porpoise.hpp>
 #include <porpoise/io/logging.hpp>
 #include <porpoise/time/timespan.hpp>
 
@@ -131,7 +132,7 @@ namespace porpoise { namespace io { namespace logging {
 
     log::~log()
     {
-        if (!_moved)
+        if (!_moved.load())
         {
             emit("\r\n");
             _lock.release();
@@ -156,6 +157,11 @@ namespace porpoise { namespace io { namespace logging {
 
     void log::emit(char c)
     {
+        if (_moved.load())
+        {
+            PORPOISE_ABORT("Can't emit from a moved instance of log");
+        }
+
         if (_current_level < _minimum_level)
         {
             return;
@@ -171,6 +177,11 @@ namespace porpoise { namespace io { namespace logging {
 
     void log::emit(const char* string)
     {
+        if (_moved.load())
+        {
+            PORPOISE_ABORT("Can't emit from a moved instance of log");
+        }
+
         if (_current_level < _minimum_level)
         {
             return;
@@ -186,6 +197,11 @@ namespace porpoise { namespace io { namespace logging {
 
     void log::emit(intmax_t number)
     {
+        if (_moved.load())
+        {
+            PORPOISE_ABORT("Can't emit from a moved instance of log");
+        }
+
         if (_current_level < _minimum_level)
         {
             return;
@@ -204,6 +220,11 @@ namespace porpoise { namespace io { namespace logging {
 
     void log::emit(uintmax_t number)
     {
+        if (_moved.load())
+        {
+            PORPOISE_ABORT("Can't emit from a moved instance of log");
+        }
+
         if (_current_level < _minimum_level)
         {
             return;
