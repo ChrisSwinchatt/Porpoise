@@ -3,22 +3,35 @@
 
 #include <porpoise.hpp>
 #include <porpoise/heap.hpp>
+#include <porpoise/sync/lock-guard.hpp>
 
 extern uint8_t __kernel_end__[];
 
 namespace porpoise {
-    uintptr_t heap::curr;
+    uintptr_t heap::_curr;
 
     void heap::init()
     {
-        curr = reinterpret_cast<uintptr_t>(__kernel_end__);
+        _curr = reinterpret_cast<uintptr_t>(__kernel_end__);
     }
 
-    void* heap::allocate(size_t bytes)
+    void* heap::allocate(size_t bytes, size_t alignment, oom_behaviour behaviour)
     {
-        curr += curr & ~(sizeof(uint64_t) - 1);
-        auto p = curr;
-        curr += bytes;
+        sync::lock_guard guard(_lock);
+
+        _curr += _curr & ~(alignment - 1);
+        if (_curr + bytes > TOP)
+        {
+            if (behaviour == oom_behaviour::abort)
+            {
+                PORPOISE_ABORT("Out of memory");
+            }
+
+            return nullptr;
+        }
+
+        auto p = _curr;
+        _curr += bytes;
         return reinterpret_cast<void*>(p);
     }
     
