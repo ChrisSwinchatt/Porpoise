@@ -9,6 +9,15 @@
 #define CYCLES_TO_MILLIS(CYCLES, HERTZ) ((CYCLES)*1000/(HERTZ))
 
 namespace porpoise { namespace time {
+    struct hertz_setter
+    {
+        hertz_setter()
+        {
+            uint32_t freq;
+            timespan::cpu_hertz(freq);
+        }
+    } set_hertz;
+
     uintmax_t timespan::_cpu_hertz = DEFAULT_CPU_HERTZ;
 
     void timespan::cpu_hertz(uintmax_t next)
