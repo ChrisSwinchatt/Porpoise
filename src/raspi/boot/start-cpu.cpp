@@ -17,7 +17,7 @@ namespace porpoise { namespace boot {
             case 3: *reinterpret_cast<uintptr_t*>(0xF0) = source; break;
             default:
                 PORPOISE_ABORT(
-                    "BUG: Got request run function "
+                    "BUG: Received request to run function "
                     << set_width(16)
                     << set_fill(0)
                     << set_base(16)
