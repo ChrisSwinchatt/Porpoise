@@ -19,14 +19,6 @@ namespace porpoise { namespace io { namespace logging {
         }
     };
 
-#define MANIP_LIST(F) \
-    F(set_width,   uint8_t, field_width)     \
-    F(set_fill,    char,    fill_char)       \
-    F(set_base,    uint8_t, base)            \
-    F(show_prefix, bool,    prefix)         \
-    F(boolalpha,   bool,    boolalpha)       \
-    F(hexupper,    bool,    hexupper)
-
     struct set_width : manipulator
     {
         set_width(uint8_t value) : _value(value) {}
@@ -76,7 +68,7 @@ namespace porpoise { namespace io { namespace logging {
     };
 }}} // porpoise::io::logging
 
-
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, void*);
 porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, char c);
 porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, const char* s);
 porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, int8_t number);

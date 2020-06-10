@@ -18,13 +18,8 @@ namespace porpoise { namespace boot {
             default:
                 PORPOISE_ABORT(
                     "BUG: Received request to run function "
-                    << set_width(16)
-                    << set_fill(0)
-                    << set_base(16)
-                    << show_prefix(true)
-                    << source
+                    << reinterpret_cast<void*>(source)
                     << " on invalid CPU: "
-                    << reset()
                     << id
                     << "; valid values are 1, 2 or 3\n"
                 );
