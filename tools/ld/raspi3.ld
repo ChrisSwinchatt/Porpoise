@@ -8,27 +8,13 @@ SECTIONS
         KEEP(*(.text.boot))
 		*(.text*)
 		*(.gnu.linkonce.t*)
+        *(.init)
+        *(.fini)
         __code_end__   = .;
-    }
-    .init_array :
-    {
-        crti.o(.init_array)
-        KEEP (*(SORT(EXCLUDE_FILE(crti.o crtn.o) .init_array.*)))
-        KEEP (*(EXCLUDE_FILE(crti.o crtn.o) .init_array))
-        crtn.o(.init_array)
-    }
-    .fini_array :
-    {
-        crti.o(.fini_array)
-        KEEP (*(SORT(EXCLUDE_FILE(crti.o crtn.o) .fini_array.*)))
-        KEEP (*(EXCLUDE_FILE(crti.o crtn.o) .fini_array))
-        crtn.o(.fini_array)
     }
     .data BLOCK(4K) : ALIGN(4K) {
         __data_start__ = .;
 		*(.data)
-        *(.ctors*)
-        *(.dtors*)
         *(.gnu.linkonce.d*)
         *(.jcr)
         __data_end__ = .;
@@ -37,6 +23,10 @@ SECTIONS
         __rodata_start__ = .;
         *(.rodata*)
         *(.gnu.linkonce.r*)
+        *(.init_array)
+        *(.ctors*)
+        *(.fini_array)
+        *(.dtors*)
         __rodata_end__ = .;
     }
     .eh_frame BLOCK(4K) : ALIGN(4K) {

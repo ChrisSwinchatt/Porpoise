@@ -12,12 +12,13 @@ CXFLAGS   = -Iinclude/shared -Iinclude/$(MACHINE_BASE) -Iinclude/shared/lib -Iin
             -D__$(MACHINE_BASE)__=$(MACHINE_VERSION)\
 			-ffreestanding -nostdlib -fno-exceptions -fno-rtti -fno-stack-protector\
 			-std=c++17 -Wall -Wextra
+LD        = $(PREFIX)-ld
 LDFLAGS   = -Ttools/ld/$(MACHINE).ld 
-LIBRARIES = -lgcc
+LIBRARIES = $(shell $(CXX) $(CXFLAGS) --print-file-name=libgcc.a)
 OBJCOPY  = $(PREFIX)-objcopy
 
 EMU      = qemu-system-aarch64
-EMUFLAGS = -M $(MACHINE),usb=on -smp 4 -m 512 -d guest_errors -display none
+EMUFLAGS = -M $(MACHINE),usb=on -smp 4 -m 1G -d guest_errors -display none
 
 OBJECTS = $(patsubst src/%.S,obj/%.o,$(patsubst src/%.cpp,obj/%.o,$(shell find src/shared \( -name '*.cpp' -o -name '*.S' \))))\
           $(patsubst src/%.S,obj/%.o,$(patsubst src/%.cpp,obj/%.o,$(shell find src/$(MACHINE_BASE) \( -name '*.cpp' -o -name '*.S' \))))
@@ -55,7 +56,7 @@ $(KERNEL_BINARY): $(KERNEL_ELF)
 $(KERNEL_ELF): $(OBJECTS)
 	@echo "Linking `basename $@`"
 	@mkdir -p `dirname $@`
-	@$(CXX) $(CXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBRARIES)
+	@$(LD) $(LDFLAGS) -o $@ $^ $(LIBRARIES)
 
 run-qemu: $(KERNEL_ELF)
 	$(EMU) $(EMUFLAGS) -serial stdio -kernel $(KERNEL_ELF)
