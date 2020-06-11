@@ -78,7 +78,7 @@ namespace porpoise { namespace sync {
 
     /// Atomic wrapper.
     template <class T>
-    struct atomic : public ::porpoise::sync::internal::atomic_base<T>
+    struct atomic : ::porpoise::sync::internal::atomic_base<T>
     {
         using value_type       = typename ::porpoise::sync::internal::atomic_base<T>::value_type;
         using reference        = typename ::porpoise::sync::internal::atomic_base<T>::reference;
@@ -88,18 +88,6 @@ namespace porpoise { namespace sync {
         explicit atomic(const_reference value) { this->_value = value; }
 
         explicit atomic(rvalue_reference value) { this->_value = value; }
-
-        atomic<value_type>& operator=(const value_type& other)
-        {
-            this->store(other);
-            return *this;
-        }
-
-        atomic<value_type>& operator=(const atomic<value_type>& other)
-        {
-            this->store(other.load());
-            return *this;
-        }
     };
 
 #define NUMERIC_LIST(F)     \
@@ -138,6 +126,10 @@ namespace porpoise { namespace sync {
         TYPE operator--(int)                                                                              \
         {                                                                                                 \
             return __atomic_sub_fetch(&_value, 1, static_cast<int>(memory_order::seq_cst));               \
+        }                                                                                                 \
+        void operator=(const value_type& other)                                                           \
+        {                                                                                                 \
+            this->store(other);                                                                           \
         }                                                                                                 \
     };
 

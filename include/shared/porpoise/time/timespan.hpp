@@ -18,7 +18,7 @@ namespace porpoise { namespace time {
         
         static timespan millis(uintmax_t value);
 
-        timespan(uintmax_t cycles);
+        explicit timespan(uintmax_t cycles);
 
         uintmax_t cycles() const;
         

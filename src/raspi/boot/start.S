@@ -13,6 +13,8 @@ _start:
     mrs     x1,     mpidr_el1
     and     x1,     x1,     #3
 
+    cbnz    x1,     _hang
+
     mov     x2,     BOOT_ORIGIN
 
     // For CPU 0, boot immediately with sp=BOOT_ORIGIN, x0=DTB and x1=0.
@@ -26,4 +28,7 @@ N:  mov     x3,     STACK_SIZE
     sub     x2,     x2,     x3      // x2 = BOOT_ORIGIN - STACK_SIZE*cpu
     mov     sp,     x2
     b       boot_kernel
+
+_hang:
+    b       _hang
 

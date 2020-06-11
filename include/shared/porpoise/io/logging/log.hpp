@@ -1,9 +1,9 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
-#include <porpoise/sync/atomic.hpp>
-#include <porpoise/sync/spinlock.hpp>
+#include <porpoise/sync/semaphore.hpp>
 
 #define PORPOISE_LOG_TRACE(...) do {auto __log = ::porpoise::io::logging::log::trace(); __log << __VA_ARGS__;} while (0)
 #define PORPOISE_LOG_DEBUG(...) do {auto __log = ::porpoise::io::logging::log::debug(); __log << __VA_ARGS__;} while (0)
@@ -65,7 +65,7 @@ namespace porpoise { namespace io { namespace logging {
 
         void operator=(log&& other);
 
-        ~log();
+        virtual ~log();
 
         void emit(char c);
 
@@ -76,6 +76,8 @@ namespace porpoise { namespace io { namespace logging {
         void emit(intmax_t number);
 
         void emit(uintmax_t number);
+
+        void flush();
 
         uint8_t field_width() const;
 
@@ -105,28 +107,43 @@ namespace porpoise { namespace io { namespace logging {
 
         void operator=(const log&) = delete;
     protected:
-        log(log_level level);
+        explicit log(log_level level);
 
     private:
-        static log_level       _minimum_level;
-        static log_sink*       _sinks[MAX_SINK];
-        static int             _num_sinks;
-        static sync::spinlock  _lock;
+        static log_level      _minimum_level;
+        static log_sink*      _sinks[MAX_SINK];
+        static int            _num_sinks;
+        static sync::spinlock _sink_lock;
 
         static log get(log_level level, const char* lvlstr);
 
-        log_level          _current_level;
-        uint8_t            _field_width;
-        char               _fill_char;
-        uint8_t            _base;
-        bool               _prefix    : 1;
-        bool               _boolalpha : 1;
-        bool               _hexupper  : 1;
-        sync::atomic<bool> _moved;
+        struct log_internal_state
+        {
+            log_level current_level;
+            uint8_t   field_width;
+            char      fill_char;
+            uint8_t   base;
+            bool      prefix;
+            bool      boolalpha;
+            bool      hexupper;
 
-        void emit_all(char c);
+            explicit log_internal_state(log_level level)
+            : current_level(level)
+            , field_width(0)
+            , fill_char(' ')
+            , base(10)
+            , prefix(false)
+            , boolalpha(false)
+            , hexupper(false)
+            {
+            }
+        } * _state;
 
-        void emit_all(const char* s);
+        bool is_active_instance() const;
+
+        void internal_emit(char c);
+
+        void internal_emit(const char* s);
     };
 
 }}} // porpoise::io::logging

@@ -11,15 +11,30 @@ namespace porpoise {
         enum class oom_behaviour
         {
             abort,
-            null
+            return_null,
+            default_ = abort
         };
+
+        static constexpr size_t DEFAULT_ALIGNMENT = sizeof(uint64_t);
 
         static void init();
 
+        static void* allocate(size_t bytes);
+
         static void* allocate(
             size_t        bytes,
-            size_t        alignment = sizeof(uint64_t),
-            oom_behaviour behaviour = oom_behaviour::abort
+            size_t        alignment
+        );
+
+        static void* allocate(
+            size_t        bytes,
+            oom_behaviour behaviour
+        );
+
+        static void* allocate(
+            size_t        bytes,
+            size_t        alignment,
+            oom_behaviour behaviour
         );
         
         static void deallocate(void* ptr);

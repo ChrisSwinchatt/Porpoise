@@ -8,9 +8,9 @@ struct serial_sink : log_sink
 {
     serial_sink(uart* dev, log_level min_level);
 
-    void emit(log_level level, const char* event);
+    void emit(log_level level, const char* event) override;
 
-    void emit(log_level level, char c);
+    void emit(log_level level, char c) override;
 private:
     uart*     _dev;
     log_level _min_level;

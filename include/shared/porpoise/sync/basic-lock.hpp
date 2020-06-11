@@ -8,5 +8,10 @@ namespace porpoise { namespace sync {
 
         /// Release the lock.
         virtual void release() = 0;
+
+        basic_lock(basic_lock&) = delete;
+        void operator=(basic_lock&) = delete;
+    protected:
+        basic_lock() = default;
     };
 }} // porpoise::sync

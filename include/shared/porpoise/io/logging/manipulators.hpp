@@ -8,7 +8,7 @@
 namespace porpoise { namespace io { namespace logging {
     struct reset : manipulator
     {
-        void operator()(log& log_)
+        void operator()(log& log_) override
         {
             log_.base(10);
             log_.prefix(false);
@@ -21,48 +21,48 @@ namespace porpoise { namespace io { namespace logging {
 
     struct set_width : manipulator
     {
-        set_width(uint8_t value) : _value(value) {}
-        void operator()(log& log_) {log_.field_width(_value);}
+        explicit set_width(uint8_t value) : _value(value) {}
+        void operator()(log& log_) override {log_.field_width(_value);}
     private:
         uint8_t _value;
     };
 
     struct set_fill : manipulator
     {
-        set_fill(char value) : _value(value) {}
-        void operator()(log& log_) {log_.fill_char(_value);}
+        explicit set_fill(char value) : _value(value) {}
+        void operator()(log& log_) override {log_.fill_char(_value);}
     private:
         char _value;
     };
 
     struct set_base : manipulator
     {
-        set_base(uint8_t value) : _value(value) {}
-        void operator()(log& log_) {log_.base(_value);}
+        explicit set_base(uint8_t value) : _value(value) {}
+        void operator()(log& log_) override {log_.base(_value);}
     private:
         uint8_t _value;
     };
 
     struct show_prefix : manipulator
     {
-        show_prefix(bool value) : _value(value) {}
-        void operator()(log& log_) {log_.prefix(_value);}
+        explicit show_prefix(bool value) : _value(value) {}
+        void operator()(log& log_) override {log_.prefix(_value);}
     private:
         bool _value;
     };
 
     struct boolalpha : manipulator
     {
-        boolalpha(bool value) : _value(value) {}
-        void operator()(log& log_) {log_.boolalpha(_value);}
+        explicit boolalpha(bool value) : _value(value) {}
+        void operator()(log& log_) override {log_.boolalpha(_value);}
     private:
         bool _value;
     };
 
     struct hexupper : manipulator
     {
-        hexupper(bool value) : _value(value) {}
-        void operator()(log& log_) {log_.hexupper(_value);}
+        explicit hexupper(bool value) : _value(value) {}
+        void operator()(log& log_) override {log_.hexupper(_value);}
     private:
         bool _value;
     };

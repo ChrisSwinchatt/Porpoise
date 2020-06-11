@@ -5,21 +5,21 @@
 
 namespace porpoise { namespace sync {
     struct spinlock : public basic_lock {
-        bool acquire() final
-        {
-            while (_flag.test_and_set())
-            {
-                // Do nothing.
-            }
+        spinlock();
 
-            return true;
-        }
+        spinlock(spinlock&&);
 
-        void release() final
-        {
-            _flag.clear();
-        }
+        void operator=(spinlock&&);
+
+        bool acquire() override;
+
+        void release() override;
+
+        spinlock(spinlock&) = delete;
+
+        void operator=(spinlock&) = delete;
     private:
-        atomic_flag _flag;
+        atomic_flag  _lock;
+        atomic<bool> _moved;
     };
 }} // porpoise::sync

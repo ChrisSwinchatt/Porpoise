@@ -15,6 +15,7 @@ SECTIONS
     .data BLOCK(4K) : ALIGN(4K) {
         __data_start__ = .;
 		*(.data)
+		*(.data.*)
         *(.gnu.linkonce.d*)
         *(.jcr)
         __data_end__ = .;

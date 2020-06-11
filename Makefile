@@ -1,14 +1,18 @@
+DEBUG := 1
+
 MACHINE_BASE    = raspi
 MACHINE_VERSION = 3
 MACHINE         = $(MACHINE_BASE)$(MACHINE_VERSION)
 
 KERNEL_ELF    = bin/porpoise.elf
+KERNEL_DEBUG  = bin/porpoise.debug
 KERNEL_BINARY = bin/sdcard/boot/kernel8.img
 
 PREFIX := aarch64-linux-gnu
 
 CXX       = $(PREFIX)-g++
-CXFLAGS   = -Iinclude/shared -Iinclude/$(MACHINE_BASE) -Iinclude/shared/lib -Iinclude/$(MACHINE_BASE)/lib\
+INCLUDES  = -Iinclude/shared -Iinclude/$(MACHINE_BASE) -Iinclude/shared/lib -Iinclude/$(MACHINE_BASE)/lib
+CXFLAGS   = $(INCLUDES)\
             -D__$(MACHINE_BASE)__=$(MACHINE_VERSION)\
 			-ffreestanding -nostdlib -fno-exceptions -fno-rtti -fno-stack-protector\
 			-std=c++17 -Wall -Wextra
@@ -34,38 +38,43 @@ CXFLAGS += -g0 -O3
 endif
 
 obj/%.o: src/%.cpp
-	@echo "Compiling `basename $^`"
+	@echo "<<< `basename $^`"
 	@mkdir -p `dirname $@`
-	@$(CXX) $(CXFLAGS) -c -o $@ $^
+	@$(CXX) $(CXFLAGS) -S -o $@.S $^
+	@$(CXX) $(CXFLAGS) -c -o $@ $@.S
 
 obj/%.o: src/%.S
-	@echo "Assembling `basename $^`"
+	@echo "<<< `basename $^`"
 	@mkdir -p `dirname $@`
 	@$(CXX) $(CXFLAGS) -D__ASM_SOURCE__ -c -o $@ $^
 
 all: $(KERNEL_BINARY)
 
 clean:
-	@rm -rf obj/* $(KERNEL_BINARY) $(KERNEL_ELF)
+	@rm -rf obj/* $(KERNEL_BINARY) $(KERNEL_ELF) $(KERNEL_DEBUG)
 
-$(KERNEL_BINARY): $(KERNEL_ELF)
-	@echo "Converting to binary `basename $@`"
+$(KERNEL_BINARY): $(OBJECTS)
 	@mkdir -p `dirname $@`
-	@$(OBJCOPY) -O binary $< $@
+	@echo ">>> `basename $(KERNEL_ELF)`"
+	@$(LD) $(LDFLAGS) -o $(KERNEL_ELF) $^ $(LIBRARIES)
+	@
+	@echo ">>> `basename $(KERNEL_DEBUG)`"
+	@cp $(KERNEL_ELF) $(KERNEL_DEBUG)
+	@$(OBJCOPY) --strip-all $(KERNEL_ELF)
+	@
+	@echo ">>> `basename $@`"
+	@$(OBJCOPY) -O binary $(KERNEL_ELF) $@
 
-$(KERNEL_ELF): $(OBJECTS)
-	@echo "Linking `basename $@`"
-	@mkdir -p `dirname $@`
-	@$(LD) $(LDFLAGS) -o $@ $^ $(LIBRARIES)
-
-run-qemu: $(KERNEL_ELF)
+run-qemu: $(KERNEL_BINARY)
 	$(EMU) $(EMUFLAGS) -serial stdio -kernel $(KERNEL_ELF)
 
-mon-qemu: $(KERNEL_ELF)
+mon-qemu: $(KERNEL_BINARY)
 	$(EMU) $(EMUFLAGS) -monitor stdio -kernel $(KERNEL_ELF)
 
-debug-qemu: $(KERNEL_ELF)
-	$(EMU) $(EMUFLAGS) -kernel $(KERNEL_ELF) -s -S &
-	gdb-multiarch -s $(KERNEL_ELF) -q -ex "set architecture aarch64" -ex "b _start" -ex "target remote :1234"
+debug-qemu: $(KERNEL_BINARY)
+	$(EMU) $(EMUFLAGS) -kernel $(KERNEL_ELF) -s -S -monitor stdio
 
-.PHONY: run-qemu debug-qemu $(KERNEL_BINARY) $(KERNEL_ELF)
+check:
+	@cppcheck --quiet --enable=all $(INCLUDES) `find src -name "*.cpp"` `find include -name "*.hpp"` 2>&1 | grep -v "never used"
+
+.PHONY: run-qemu debug-qemu $(KERNEL_BINARY)
