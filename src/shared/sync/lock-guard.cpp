@@ -6,28 +6,13 @@
 #include <porpoise/sync/spinlock.hpp>
 
 namespace porpoise { namespace sync {
-    lock_guard::lock_guard(spinlock& lock) : _lock(&lock)
+    lock_guard::lock_guard(basic_lock& lock) : _lock(&lock)
     {
         _lock->acquire();
     }
 
     lock_guard::~lock_guard()
     {
-        if (_lock != nullptr)
-        {
-            _lock->release();
-        }
-    }
-
-   lock_guard::lock_guard(lock_guard&& other)
-    {
-        _lock        = other._lock;
-        other._lock  = nullptr;
-    }
-
-    void lock_guard::operator=(lock_guard&& other)
-    {
-        _lock        = other._lock;
-        other._lock  = nullptr;
+        _lock->release();
     }
 }} // porpoise::sync

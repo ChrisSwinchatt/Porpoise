@@ -3,16 +3,25 @@ SECTIONS
 {
     . = 0x80000;
     __kernel_start__ = .;
-    .text BLOCK(4K) : ALIGN(4K) {
+    .text : ALIGN(16) {
         __code_start__ = .;
         KEEP(*(.text.boot))
+        *(.fini)
 		*(.text*)
 		*(.gnu.linkonce.t*)
-        *(.init)
-        *(.fini)
         __code_end__   = .;
     }
-    .data BLOCK(4K) : ALIGN(4K) {
+    .init_fini : ALIGN(16) {
+        *(.init)
+        __init_array_start__ = .;
+        *(.init_array)
+        __init_array_end__   = .;
+        *(.fini)
+        __fini_array_start__ = .;
+        *(.fini_array)
+        __fini_array_end__   = .;
+    }
+    .data : ALIGN(16) {
         __data_start__ = .;
 		*(.data)
 		*(.data.*)
@@ -20,17 +29,13 @@ SECTIONS
         *(.jcr)
         __data_end__ = .;
     }
-    .rodata BLOCK(4K) : ALIGN(4K) {
+    .rodata : ALIGN(16) {
         __rodata_start__ = .;
         *(.rodata*)
         *(.gnu.linkonce.r*)
-        *(.init_array)
-        *(.ctors*)
-        *(.fini_array)
-        *(.dtors*)
         __rodata_end__ = .;
     }
-    .eh_frame BLOCK(4K) : ALIGN(4K) {
+    .eh_frame : ALIGN(16) {
         start_eh_frame = .;
         __eh_frame_start__ = .;
         *(.eh_frame)
@@ -38,7 +43,7 @@ SECTIONS
         QUAD(0)
         __eh_frame_end__ = .;
     }
-    .bss BLOCK(4K) : ALIGN(4K) {
+    .bss : ALIGN(16) {
         __bss_start__ = .;
         *(.bss)
         *(.gnu.linkonce.b*)

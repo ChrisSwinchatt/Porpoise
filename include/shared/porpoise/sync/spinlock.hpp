@@ -4,16 +4,16 @@
 #include <porpoise/sync/basic-lock.hpp>
 
 namespace porpoise { namespace sync {
-    struct spinlock : public basic_lock {
+    struct spinlock : basic_lock {
         spinlock();
 
         spinlock(spinlock&&);
 
         void operator=(spinlock&&);
 
-        bool acquire() override;
+        virtual bool acquire() override;
 
-        void release() override;
+        virtual void release() override;
 
         spinlock(spinlock&) = delete;
 

@@ -43,7 +43,6 @@ namespace porpoise {
     void* heap::allocate(size_t bytes, size_t alignment, oom_behaviour behaviour)
     {
         lock_guard guard(_lock);
-
         _curr += _curr & ~(alignment - 1);
         if (_curr + bytes > TOP)
         {
@@ -56,7 +55,7 @@ namespace porpoise {
             return nullptr;
         }
 
-        PORPOISE_LOG_TRACE("Allocated " << bytes << "bytes");
+        // PORPOISE_LOG_TRACE("Allocated " << bytes << "bytes");
         auto p = _curr;
         _curr += bytes;
         return reinterpret_cast<void*>(p);

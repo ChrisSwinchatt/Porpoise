@@ -1,5 +1,6 @@
 #include <porpoise.hpp>
 #include <porpoise/boot.hpp>
+#include <porpoise/heap.hpp>
 #include <porpoise/io/logging.hpp>
 #include <porpoise/io/logging/sinks/serial-sink.hpp>
 #include <porpoise/io/uart.hpp>
@@ -47,8 +48,7 @@ namespace porpoise { namespace boot {
         clear_bss();
         _init();
 
-        timespan::cpu_hertz(0);
-
+        heap::init();
         static uart*       uart0 = uart::init(uart::baud_rate::bd115200);
         static serial_sink uart0_sink(uart0, log_level::trace);
         log::add_sink(&uart0_sink);

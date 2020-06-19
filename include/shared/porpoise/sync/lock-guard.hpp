@@ -10,7 +10,7 @@
 
 namespace porpoise { namespace sync {
     struct lock_guard {
-        explicit lock_guard(spinlock& lock);
+        explicit lock_guard(basic_lock& lock);
 
         virtual ~lock_guard();
 
@@ -21,6 +21,6 @@ namespace porpoise { namespace sync {
         lock_guard(lock_guard& other) = delete;
         void operator=(lock_guard& other) = delete;
     private:
-        spinlock* _lock;
+        basic_lock* _lock;
     };
 }} // porpoise::sync

@@ -11,16 +11,19 @@
 namespace porpoise { namespace time {
     uintmax_t timespan::_cpu_hertz = DEFAULT_CPU_HERTZ;
 
+    namespace internal {
+        static struct hertz_initializer {
+            hertz_initializer()
+            {
+                uint32_t freq = 0x600DC0DE;
+                asm volatile("mrs %0, cntfrq_el0":"=r"(freq));
+                timespan::cpu_hertz(freq);
+            }
+        } instance;
+    }
+
     void timespan::cpu_hertz(uintmax_t next)
     {
-        if (next == 0)
-        {
-            uint32_t freq;
-            asm volatile("mrs %0, cntfrq_el0":"=r"(freq));
-            timespan::cpu_hertz(freq);
-            return;
-        }
-
         _cpu_hertz = next;
     }
     

@@ -2,31 +2,31 @@
 
 using fn_ptr = void(*)();
 
-extern "C" fn_ptr _init_array_start[];
-extern "C" fn_ptr _init_array_end[];
+extern "C" fn_ptr __init_array_start__[];
+extern "C" fn_ptr __init_array_end__[];
 
-extern "C" fn_ptr _fini_array_start[];
-extern "C" fn_ptr _fini_array_end[];
+extern "C" fn_ptr __fini_array_start__[];
+extern "C" fn_ptr __fini_array_end__[];
 
 extern "C" void _init()
 {
-    auto p = reinterpret_cast<uintptr_t>(_init_array_start);
-    auto q = reinterpret_cast<uintptr_t>(_init_array_end);
+    auto p = __init_array_start__;
+    auto q = __init_array_end__;
     for (; p < q; p++)
     {
-        (*reinterpret_cast<fn_ptr>(p))();
+        (*p)();
     }
 }
 
 extern "C" void _fini()
 {
-    auto p = reinterpret_cast<uintptr_t>(_fini_array_start);
-    auto q = reinterpret_cast<uintptr_t>(_fini_array_end);
+    auto p = __fini_array_start__;
+    auto q = __fini_array_end__;
     for (; p < q; p++)
     {
-        (*reinterpret_cast<fn_ptr>(p))();
+        (*p)();
     }
 }
 
-fn_ptr _init_array_start[] __attribute__((used, section(".init_array"), aligned(sizeof(fn_ptr)))) = {};
-fn_ptr _fini_array_start[] __attribute__((used, section(".fini_array"), aligned(sizeof(fn_ptr)))) = {};
+fn_ptr __init_array_start__[] __attribute__((used, section(".init_array"), aligned(sizeof(fn_ptr)))) = {};
+fn_ptr __fini_array_start__[] __attribute__((used, section(".fini_array"), aligned(sizeof(fn_ptr)))) = {};

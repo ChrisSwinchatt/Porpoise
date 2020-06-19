@@ -66,12 +66,12 @@ namespace porpoise { namespace io { namespace logging {
 
     bool log::add_sink(log_sink* sink)
     {
+        lock_guard guard(_sink_lock);
         if (sink == nullptr)
         {
             return false;
         }
 
-        lock_guard guard(_sink_lock);
         if (_num_sinks >= MAX_SINK)
         {
             return false;
@@ -96,9 +96,8 @@ namespace porpoise { namespace io { namespace logging {
         return _num_sinks;
     }
 
-    log::log(log_level level)
+    log::log(log_level level) : _state(new log_internal_state(level))
     {
-        _state = new log_internal_state(level);
     }
 
     log::log(log&& other)

@@ -13,7 +13,6 @@ _start:
     mrs     x1,     mpidr_el1
     and     x1,     x1,     #3
 
-    cbnz    x1,     _hang
 
     mov     x2,     BOOT_ORIGIN
 
@@ -31,4 +30,3 @@ N:  mov     x3,     STACK_SIZE
 
 _hang:
     b       _hang
-

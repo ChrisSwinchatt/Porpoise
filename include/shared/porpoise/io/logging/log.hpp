@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <porpoise/sync/semaphore.hpp>
+#include <porpoise/sync/spinlock.hpp>
 
 #define PORPOISE_LOG_TRACE(...) do {auto __log = ::porpoise::io::logging::log::trace(); __log << __VA_ARGS__;} while (0)
 #define PORPOISE_LOG_DEBUG(...) do {auto __log = ::porpoise::io::logging::log::debug(); __log << __VA_ARGS__;} while (0)
