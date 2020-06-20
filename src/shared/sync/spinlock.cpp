@@ -25,10 +25,12 @@ namespace porpoise { namespace sync {
             return false;
         }
 
+#if CONFIG_SMP_ENABLED
         while (_lock.test_and_set())
         {
             // Do nothing.
         }
+#endif
 
         return true;
     }

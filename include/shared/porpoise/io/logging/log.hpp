@@ -117,27 +117,14 @@ namespace porpoise { namespace io { namespace logging {
 
         static log get(log_level level, const char* lvlstr);
 
-        struct log_internal_state
-        {
-            log_level current_level;
-            uint8_t   field_width;
-            char      fill_char;
-            uint8_t   base;
-            bool      prefix;
-            bool      boolalpha;
-            bool      hexupper;
-
-            explicit log_internal_state(log_level level)
-            : current_level(level)
-            , field_width(0)
-            , fill_char(' ')
-            , base(10)
-            , prefix(false)
-            , boolalpha(false)
-            , hexupper(false)
-            {
-            }
-        } * _state;
+        log_level _current_level;
+        uint8_t   _field_width;
+        char      _fill_char;
+        uint8_t   _base;
+        bool      _prefix;
+        bool      _boolalpha;
+        bool      _hexupper;
+        bool      _is_active;
 
         bool is_active_instance() const;
 

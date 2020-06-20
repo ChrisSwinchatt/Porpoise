@@ -1,3 +1,4 @@
+#include <porpoise.hpp>
 #include <porpoise/io/logging/manipulators.hpp>
 
 using namespace porpoise::io::logging;
@@ -101,6 +102,13 @@ log& operator<<(log& log_, boolalpha manip)
 log& operator<<(log& log_, hexupper manip)
 {
     manip(log_);
+    return log_;
+}
+
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, nullptr_t p)
+{
+    PORPOISE_UNUSED(p);
+    log_ << "(null)";
     return log_;
 }
 

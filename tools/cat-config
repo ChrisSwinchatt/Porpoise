@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+
+NAME = os.path.basename(sys.argv[0])
+CONFIG_INI = os.path.join(os.getcwd(), 'tools', 'config.ini')
+
+def print_config_line(section, key, value):
+    if section:
+        section = '_' + section
+    print(f'-DCONFIG{section.upper()}_{key.upper()}={value}')
+
+if __name__ == '__main__':
+    if not os.path.exists(CONFIG_INI):
+        print(f'{NAME}: {CONFIG_INI} not found', file=sys.stderr)
+        sys.exit(1)
+    with open(CONFIG_INI) as ini:
+        section = ''
+        line_num = 0
+        for raw_line in ini:
+            line_num += 1
+            line = raw_line.strip()
+            if not line or line[0] == '#':
+                # Skip blank/comment line.
+                continue
+            if line[0] == '[':
+                # Parse section name.
+                pos = line.find(']')
+                if pos < 0:
+                    raise ValueError(f'{CONFIG_INI}:{line_num}: Unmatched [ on section line')
+                section = line[1:pos]
+            else:
+                # Split key=value pair over equals sign. Strip any comment & leading and trailing whitespace.
+                elems = line.split('=')
+                if len(elems) != 2:
+                        raise ValueError(f'{CONFIG_INI}:{line_num}: Incorrect number of equals signs (expected 1)')
+                pos = elems[1].find('#')
+                if pos >= 0:
+                    elems[1] = elems[1][0:pos]
+                elems[0] = elems[0].strip()
+                elems[1] = elems[1].strip()
+                print_config_line(section, elems[0], elems[1])

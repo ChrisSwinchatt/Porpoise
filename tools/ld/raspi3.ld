@@ -6,7 +6,6 @@ SECTIONS
     .text : ALIGN(16) {
         __code_start__ = .;
         KEEP(*(.text.boot))
-        *(.fini)
 		*(.text*)
 		*(.gnu.linkonce.t*)
         __code_end__   = .;

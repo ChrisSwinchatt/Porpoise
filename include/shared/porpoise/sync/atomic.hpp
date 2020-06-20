@@ -88,6 +88,16 @@ namespace porpoise { namespace sync {
         explicit atomic(const_reference value) { this->_value = value; }
 
         explicit atomic(rvalue_reference value) { this->_value = value; }
+
+        operator T() const
+        {
+            return this->load();
+        }
+
+        void operator=(const value_type& other)
+        {
+            this->store(other);
+        }
     };
 
 #define NUMERIC_LIST(F)     \
@@ -126,10 +136,6 @@ namespace porpoise { namespace sync {
         TYPE operator--(int)                                                                              \
         {                                                                                                 \
             return __atomic_sub_fetch(&_value, 1, static_cast<int>(memory_order::seq_cst));               \
-        }                                                                                                 \
-        void operator=(const value_type& other)                                                           \
-        {                                                                                                 \
-            this->store(other);                                                                           \
         }                                                                                                 \
     };
 
