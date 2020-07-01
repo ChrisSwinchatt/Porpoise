@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install compiler & emulator
+      run: apt update && apt install g++-aarch64-linux-gnu qemu-system-arm
+    - uses: actions/checkout@v2
+    - name: run tests
+      run: make test
