@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: install compiler & emulator
-      run: apt update && apt install g++-aarch64-linux-gnu qemu-system-arm
+      run: sudo apt-get update && sudo apt-get install g++-aarch64-linux-gnu qemu-system-arm
     - uses: actions/checkout@v2
     - name: run tests
       run: make test
