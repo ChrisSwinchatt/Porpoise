@@ -1,3 +1,3 @@
-# Porpoise
+# poRPOiSe
 
-Porpoise is an operating system for Raspberry Pi designed for embedded software and robotics.
+poRPOiSe is an operating system for Raspberry Pi designed for embedded systems and robotics.

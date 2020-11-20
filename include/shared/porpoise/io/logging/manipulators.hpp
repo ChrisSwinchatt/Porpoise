@@ -68,6 +68,7 @@ namespace porpoise { namespace io { namespace logging {
     };
 }}} // porpoise::io::logging
 
+porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, nullptr_t);
 porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, void*);
 porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, char c);
 porpoise::io::logging::log& operator<<(porpoise::io::logging::log& log_, const char* s);

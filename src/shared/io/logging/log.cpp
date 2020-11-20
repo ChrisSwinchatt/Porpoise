@@ -4,7 +4,7 @@
 #include <string.hpp>
 
 #include <porpoise.hpp>
-#include <porpoise/heap.hpp>
+#include <porpoise/mem/heap.hpp>
 #include <porpoise/io/logging.hpp>
 #include <porpoise/time/timespan.hpp>
 #include <porpoise/sync/lock-guard.hpp>
@@ -14,7 +14,7 @@ namespace porpoise { namespace io { namespace logging {
     using namespace time;
     using namespace sync;
 
-    log_level log::_minimum_level;
+    log_level log::_minimum_level = static_cast<log_level>(CONFIG_LOG_MIN_LEVEL);
     log_sink* log::_sinks[MAX_SINK];
     int       log::_num_sinks;
     spinlock  log::_sink_lock;
@@ -96,25 +96,46 @@ namespace porpoise { namespace io { namespace logging {
         return _num_sinks;
     }
 
-    log::log(log_level level) : _state(new log_internal_state(level))
-    {
-    }
+    log::log(log_level level)
+    : _current_level(level)
+    , _field_width(0)
+    , _fill_char(' ')
+    , _base(10)
+    , _prefix(false)
+    , _boolalpha(false)
+    , _hexupper(false)
+    , _is_active(true)
+    {}
 
     log::log(log&& other)
     {
-        _state       = other._state;
-        other._state = nullptr;
+        _current_level = other._current_level;
+        _field_width = other._field_width;
+        _fill_char = other._fill_char;
+        _base = other._base;
+        _prefix = other._prefix;
+        _boolalpha = other._boolalpha;
+        _hexupper = other._hexupper;
+        _is_active = true;
+        other._is_active = false;
     }
 
     void log::operator=(log&& other)
     {
-        _state = other._state;
-        other._state = nullptr;
+        _current_level = other._current_level;
+        _field_width = other._field_width;
+        _fill_char = other._fill_char;
+        _base = other._base;
+        _prefix = other._prefix;
+        _boolalpha = other._boolalpha;
+        _hexupper = other._hexupper;
+        _is_active = true;
+        other._is_active = false;
     }
 
     bool log::is_active_instance() const
     {
-        return _state != nullptr;
+        return _is_active;
     }
 
     log::~log()
@@ -122,8 +143,6 @@ namespace porpoise { namespace io { namespace logging {
         if (is_active_instance())
         {
             internal_emit("\r\n");
-            delete _state;
-            _state = nullptr;
             _sink_lock.release();
         }
     }
@@ -132,7 +151,7 @@ namespace porpoise { namespace io { namespace logging {
     {
         for (auto i = 0; i < _num_sinks; i++)
         {
-            _sinks[i]->emit(_state->current_level, s);
+            _sinks[i]->emit(_current_level, s);
         }
     }
 
@@ -140,20 +159,20 @@ namespace porpoise { namespace io { namespace logging {
     {
         for (auto i = 0; i < _num_sinks; i++)
         {
-            _sinks[i]->emit(_state->current_level, c);
+            _sinks[i]->emit(_current_level, c);
         }
     }
 
     void log::emit(char c)
     {
-        if (!is_active_instance() || _state->current_level < _minimum_level)
+        if (!is_active_instance() || _current_level < _minimum_level)
         {
             return;
         }
 
-        for (auto j = 1; j < _state->field_width; j++)
+        for (auto j = 1; j < _field_width; j++)
         {
-            internal_emit(_state->fill_char);
+            internal_emit(_fill_char);
         }
 
         internal_emit(c);
@@ -161,14 +180,14 @@ namespace porpoise { namespace io { namespace logging {
 
     void log::emit(const char* string)
     {
-        if (!is_active_instance() || _state->current_level < _minimum_level)
+        if (!is_active_instance() || _current_level < _minimum_level)
         {
             return;
         }
 
-        for (auto j = 1; j < _state->field_width; j++)
+        for (auto j = 1; j < _field_width; j++)
         {
-            internal_emit(_state->fill_char);
+            internal_emit(_fill_char);
         }
 
         internal_emit(string);
@@ -176,7 +195,7 @@ namespace porpoise { namespace io { namespace logging {
 
     void log::emit(intmax_t number)
     {
-        if (!is_active_instance() || _state->current_level < _minimum_level)
+        if (!is_active_instance() || _current_level < _minimum_level)
         {
             return;
         }
@@ -194,7 +213,7 @@ namespace porpoise { namespace io { namespace logging {
 
     void log::emit(uintmax_t number)
     {
-        if (!is_active_instance() || _state->current_level < _minimum_level)
+        if (!is_active_instance() || _current_level < _minimum_level)
         {
             return;
         }
@@ -203,10 +222,10 @@ namespace porpoise { namespace io { namespace logging {
         char buffer[DIGIT_MAX];
         auto p     = buffer;
         auto q     = buffer + DIGIT_MAX;
-        auto alpha = _state->hexupper ? 'A' : 'a';
+        auto alpha = _hexupper ? 'A' : 'a';
         do
         {
-            auto r = number%_state->base;
+            auto r = number%_base;
             if (r < 10)
             {
                 *p++ = '0' + r;
@@ -216,12 +235,12 @@ namespace porpoise { namespace io { namespace logging {
                 *p++ = alpha + r - 10;
             }
 
-            number /= _state->base;
+            number /= _base;
         } while (number && p < q);
 
-        for (auto count = p - buffer; count < _state->field_width; count++)
+        for (auto count = p - buffer; count < _field_width; count++)
         {
-            internal_emit(_state->fill_char);
+            internal_emit(_fill_char);
         }
 
         while (p-- > buffer)
@@ -237,7 +256,7 @@ namespace porpoise { namespace io { namespace logging {
             return 0;
         }
 
-        return _state->field_width;
+        return _field_width;
     }
 
     char log::fill_char() const
@@ -247,7 +266,7 @@ namespace porpoise { namespace io { namespace logging {
             return 0;
         }
 
-        return _state->fill_char;
+        return _fill_char;
     }
 
     uint8_t log::base() const
@@ -257,7 +276,7 @@ namespace porpoise { namespace io { namespace logging {
             return 0;
         }
 
-        return _state->base;
+        return _base;
     }
 
     bool log::prefix() const
@@ -267,7 +286,7 @@ namespace porpoise { namespace io { namespace logging {
             return false;
         }
 
-        return _state->prefix;
+        return _prefix;
     }
 
     bool log::boolalpha() const
@@ -277,7 +296,7 @@ namespace porpoise { namespace io { namespace logging {
             return false;
         }
 
-        return _state->boolalpha;
+        return _boolalpha;
     }
 
     bool log::hexupper() const
@@ -287,7 +306,7 @@ namespace porpoise { namespace io { namespace logging {
             return false;
         }
 
-        return _state->hexupper;
+        return _hexupper;
     }
 
     void log::field_width(uint8_t next)
@@ -297,7 +316,7 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        _state->field_width = next;
+        _field_width = next;
     }
 
     void log::fill_char(char next)
@@ -307,7 +326,7 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        _state->fill_char = next;
+        _fill_char = next;
     }
 
     void log::base(uint8_t next)
@@ -322,7 +341,7 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        _state->base = next;
+        _base = next;
     }
 
     void log::prefix(bool next)
@@ -332,7 +351,7 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        _state->prefix = next;
+        _prefix = next;
     }
 
     void log::boolalpha(bool next)
@@ -342,7 +361,7 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        _state->boolalpha = next;
+        _boolalpha = next;
     }
 
     void log::hexupper(bool next)
@@ -352,6 +371,6 @@ namespace porpoise { namespace io { namespace logging {
             return;
         }
 
-        _state->hexupper = next;
+        _hexupper = next;
     }
 }}} // porpoise::io::logging
